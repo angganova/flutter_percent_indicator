@@ -88,6 +88,10 @@ class LinearPercentIndicator extends StatefulWidget {
   /// Display a widget indicator at the end of the progress. It only works when `animation` is true
   final Widget? widgetIndicator;
 
+  final BorderSide? progressBorder;
+
+  final Color? diagonalLineColor;
+
   LinearPercentIndicator({
     Key? key,
     this.fillColor = Colors.transparent,
@@ -116,6 +120,8 @@ class LinearPercentIndicator extends StatefulWidget {
     this.restartAnimation = false,
     this.onAnimationEnd,
     this.widgetIndicator,
+    this.progressBorder,
+    this.diagonalLineColor,
   }) : super(key: key) {
     if (linearGradient != null && progressColor != null) {
       throw ArgumentError(
@@ -254,18 +260,19 @@ class _LinearPercentIndicatorState extends State<LinearPercentIndicator>
           CustomPaint(
             key: _containerKey,
             painter: _LinearPainter(
-              isRTL: widget.isRTL,
-              progress: _percent,
-              progressColor: widget.progressColor,
-              linearGradient: widget.linearGradient,
-              backgroundColor: widget.backgroundColor,
-              barRadius: widget.barRadius ??
-                  Radius.zero, // If radius is not defined, set it to zero
-              linearGradientBackgroundColor:
-                  widget.linearGradientBackgroundColor,
-              maskFilter: widget.maskFilter,
-              clipLinearGradient: widget.clipLinearGradient,
-            ),
+                isRTL: widget.isRTL,
+                progress: _percent,
+                progressColor: widget.progressColor,
+                progressBorder: widget.progressBorder,
+                linearGradient: widget.linearGradient,
+                backgroundColor: widget.backgroundColor,
+                barRadius: widget.barRadius ??
+                    Radius.zero, // If radius is not defined, set it to zero
+                linearGradientBackgroundColor:
+                    widget.linearGradientBackgroundColor,
+                maskFilter: widget.maskFilter,
+                clipLinearGradient: widget.clipLinearGradient,
+                diagonalLineColor: widget.diagonalLineColor),
             child: (widget.center != null)
                 ? Center(child: widget.center)
                 : Container(),
@@ -324,11 +331,13 @@ class _LinearPainter extends CustomPainter {
   final bool isRTL;
   final Color progressColor;
   final Color backgroundColor;
+  final BorderSide? progressBorder;
   final Radius barRadius;
   final LinearGradient? linearGradient;
   final LinearGradient? linearGradientBackgroundColor;
   final MaskFilter? maskFilter;
   final bool clipLinearGradient;
+  final Color? diagonalLineColor;
 
   _LinearPainter({
     required this.progress,
@@ -336,10 +345,12 @@ class _LinearPainter extends CustomPainter {
     required this.progressColor,
     required this.backgroundColor,
     required this.barRadius,
+    this.progressBorder,
     this.linearGradient,
     this.maskFilter,
     required this.clipLinearGradient,
     this.linearGradientBackgroundColor,
+    this.diagonalLineColor,
   }) {
     _paintBackground.color = backgroundColor;
 
@@ -369,12 +380,31 @@ class _LinearPainter extends CustomPainter {
 
     // Then draw progress line
     final xProgress = size.width * progress;
-    Path linePath = Path();
+
+    Path fullViewPath = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    Path progressPath = Path();
+    Path progressBorderPath = Path();
+
+    final bool withBorder = progressBorder != null;
+    double borderWidth = 0;
+    if (withBorder) {
+      borderWidth = progressBorder!.width;
+    }
+
     if (isRTL) {
       if (linearGradient != null) {
         _paintLine.shader = _createGradientShaderRightToLeft(size, xProgress);
       }
-      linePath.addRRect(RRect.fromRectAndRadius(
+
+      progressPath.addRRect(RRect.fromRectAndRadius(
+          Rect.fromLTWH(
+              (size.width - size.width * progress) + borderWidth,
+              borderWidth,
+              xProgress - borderWidth * 2,
+              size.height - borderWidth * 2),
+          barRadius));
+      progressBorderPath.addRRect(RRect.fromRectAndRadius(
           Rect.fromLTWH(
               size.width - size.width * progress, 0, xProgress, size.height),
           barRadius));
@@ -382,10 +412,43 @@ class _LinearPainter extends CustomPainter {
       if (linearGradient != null) {
         _paintLine.shader = _createGradientShaderLeftToRight(size, xProgress);
       }
-      linePath.addRRect(RRect.fromRectAndRadius(
+      progressPath.addRRect(RRect.fromRectAndRadius(
+          Rect.fromLTWH(borderWidth, borderWidth, xProgress - borderWidth * 2,
+              size.height - borderWidth * 2),
+          barRadius));
+      progressBorderPath.addRRect(RRect.fromRectAndRadius(
           Rect.fromLTWH(0, 0, xProgress, size.height), barRadius));
     }
-    canvas.drawPath(linePath, _paintLine);
+
+    if (withBorder) {
+      canvas.drawPath(
+          progressBorderPath, Paint()..color = progressBorder!.color);
+    }
+    canvas.drawPath(progressPath, _paintLine);
+
+    if (diagonalLineColor != null) {
+      canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
+      final double diagonalLength = xProgress / 10.ceil();
+      List.generate(diagonalLength.toInt(), (int index) {
+        Offset from = Offset(index * 10, 0);
+        Offset to = Offset((index + 2) * 10, size.height);
+        canvas.drawLine(
+            from,
+            to,
+            Paint()
+              ..color = diagonalLineColor!
+              ..strokeWidth = 1);
+      });
+
+      canvas.drawPath(
+          Path.combine(
+              PathOperation.difference, fullViewPath, progressBorderPath),
+          Paint()
+            ..style = PaintingStyle.fill
+            ..color = const Color(0x00000000)
+            ..blendMode = BlendMode.dstIn);
+      canvas.restore();
+    }
   }
 
   Shader _createGradientShaderRightToLeft(Size size, double xProgress) {

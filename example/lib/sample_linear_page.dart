@@ -31,22 +31,20 @@ class _SampleLinearPageState extends State<SampleLinearPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Padding(
-                padding: EdgeInsets.all(15.0),
-                child: LinearPercentIndicator(
-                  width: MediaQuery.of(context).size.width - 50,
-                  animation: isRunning,
-                  lineHeight: 20.0,
-                  animationDuration: 3000,
-                  percent: 0.5,
-                  animateFromLastPercent: true,
-                  center: Text("50.0%"),
-                  linearStrokeCap: LinearStrokeCap.butt,
-                  progressColor: Colors.red,
-                  widgetIndicator: RotatedBox(
-                      quarterTurns: 1,
-                      child: Icon(Icons.airplanemode_active, size: 50)),
-                ),
-              ),
+                  padding: EdgeInsets.all(15.0),
+                  child: LinearPercentIndicator(
+                      width: MediaQuery.of(context).size.width - 50,
+                      animation: isRunning,
+                      lineHeight: 50.0,
+                      animationDuration: 3000,
+                      barRadius: Radius.circular(180),
+                      percent: 0.5,
+                      animateFromLastPercent: true,
+                      center: Text("50.0%"),
+                      diagonalLineColor: Colors.black,
+                      progressColor: Colors.red,
+                      progressBorder: BorderSide(color: Colors.black, width: 2),
+                  )),
               Padding(
                 padding: EdgeInsets.all(15.0),
                 child: LinearPercentIndicator(
@@ -56,7 +54,7 @@ class _SampleLinearPageState extends State<SampleLinearPage> {
                   percent: 0.5,
                   animateFromLastPercent: true,
                   center: Text("50.0%"),
-                  linearStrokeCap: LinearStrokeCap.butt,
+
                   linearGradient: LinearGradient(
                     colors: <Color>[Color(0xffB07BE6), Color(0xff5BA2E0)],
                   ),
@@ -81,7 +79,6 @@ class _SampleLinearPageState extends State<SampleLinearPage> {
                       style: TextStyle(fontSize: 12.0),
                     ),
                     trailing: Icon(Icons.mood),
-                    linearStrokeCap: LinearStrokeCap.roundAll,
                     backgroundColor: Colors.grey,
                   ),
                 ),
@@ -99,7 +96,6 @@ class _SampleLinearPageState extends State<SampleLinearPage> {
                       style: TextStyle(fontSize: 12.0),
                     ),
                     trailing: Icon(Icons.mood),
-                    linearStrokeCap: LinearStrokeCap.roundAll,
                     backgroundColor: Colors.grey,
                     progressColor: Colors.blue,
                   ),
@@ -121,7 +117,6 @@ class _SampleLinearPageState extends State<SampleLinearPage> {
                   )),
                   percent: 0.2,
                   center: Text("20.0%"),
-                  linearStrokeCap: LinearStrokeCap.butt,
                   progressColor: Colors.red,
                 ),
               ),
