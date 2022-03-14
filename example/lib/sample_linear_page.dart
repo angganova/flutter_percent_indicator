@@ -43,7 +43,7 @@ class _SampleLinearPageState extends State<SampleLinearPage> {
                       center: Text("50.0%"),
                       diagonalLineColor: Colors.black,
                       progressColor: Colors.red,
-                      progressBorder: BorderSide(color: Colors.black, width: 2),
+                      progressBorder: BorderSide(color: Colors.black, width: 1),
                   )),
               Padding(
                 padding: EdgeInsets.all(15.0),

@@ -437,7 +437,7 @@ class _LinearPainter extends CustomPainter {
             to,
             Paint()
               ..color = diagonalLineColor!
-              ..strokeWidth = 1);
+              ..strokeWidth = 0.5);
       });
 
       canvas.drawPath(
