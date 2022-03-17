@@ -361,15 +361,34 @@ class _LinearPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Draw background first
-    Path backgroundPath = Path();
-    backgroundPath.addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height), barRadius));
-    canvas.drawPath(backgroundPath, _paintBackground);
+    final bool withBorder = progressBorder != null;
 
-    if (maskFilter != null) {
-      _paintLine.maskFilter = maskFilter;
+    double borderWidth = 0;
+
+    if (withBorder) {
+      borderWidth = progressBorder!.width;
     }
+
+    final Path fullViewPath = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final Path backgroundBorderPath = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.width, size.height), barRadius));
+    final Path backgroundFillPath = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+          Rect.fromLTWH(borderWidth, borderWidth, size.width - borderWidth * 2,
+              size.height - borderWidth * 2),
+          barRadius));
+    final Path clipOutsideBorderPath = Path.combine(
+      PathOperation.difference,
+      fullViewPath,
+      backgroundBorderPath,
+    );
+    final Path clipOutsideFillPath = Path.combine(
+      PathOperation.difference,
+      fullViewPath,
+      backgroundFillPath,
+    );
 
     if (linearGradientBackgroundColor != null) {
       Offset shaderEndPoint =
@@ -378,20 +397,13 @@ class _LinearPainter extends CustomPainter {
           ?.createShader(Rect.fromPoints(Offset.zero, shaderEndPoint));
     }
 
-    // Then draw progress line
+    /// Setup progress line
     final xProgress = size.width * progress;
 
-    Path fullViewPath = Path()
-      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
     Path progressPath = Path();
     Path progressBorderPath = Path();
 
-    final bool withBorder = progressBorder != null;
-    double borderWidth = 0;
-    if (withBorder) {
-      borderWidth = progressBorder!.width;
-    }
-
+    /// Setup progress border
     if (isRTL) {
       if (linearGradient != null) {
         _paintLine.shader = _createGradientShaderRightToLeft(size, xProgress);
@@ -420,12 +432,32 @@ class _LinearPainter extends CustomPainter {
           Rect.fromLTWH(0, 0, xProgress, size.height), barRadius));
     }
 
+    final Path finalProgressFillPath = Path.combine(
+      PathOperation.reverseDifference,
+      clipOutsideFillPath,
+      progressPath,
+    );
+
+    final Path finalProgressBorderPath = Path.combine(
+      PathOperation.reverseDifference,
+      clipOutsideBorderPath,
+      progressBorderPath,
+    );
+
+    /// Draw background
+    canvas.drawPath(backgroundBorderPath, _paintBackground);
+    canvas.drawPath(backgroundFillPath, _paintBackground);
+
+    /// Draw progress border
     if (withBorder) {
       canvas.drawPath(
-          progressBorderPath, Paint()..color = progressBorder!.color);
+          finalProgressBorderPath, Paint()..color = progressBorder!.color);
     }
-    canvas.drawPath(progressPath, _paintLine);
 
+    /// Draw progress fill color
+    canvas.drawPath(finalProgressFillPath, _paintLine);
+
+    /// Draw diagonal Line
     if (diagonalLineColor != null) {
       canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
       final double diagonalLength = xProgress / 10.ceil();
@@ -440,9 +472,13 @@ class _LinearPainter extends CustomPainter {
               ..strokeWidth = 0.5);
       });
 
+      /// Clear outside border
       canvas.drawPath(
           Path.combine(
-              PathOperation.difference, fullViewPath, progressBorderPath),
+            PathOperation.difference,
+            fullViewPath,
+            finalProgressBorderPath,
+          ),
           Paint()
             ..style = PaintingStyle.fill
             ..color = const Color(0x00000000)
