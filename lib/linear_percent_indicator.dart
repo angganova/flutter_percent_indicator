@@ -384,11 +384,11 @@ class _LinearPainter extends CustomPainter {
       fullViewPath,
       backgroundBorderPath,
     );
-    final Path clipOutsideFillPath = Path.combine(
-      PathOperation.difference,
-      fullViewPath,
-      backgroundFillPath,
-    );
+    // final Path clipOutsideFillPath = Path.combine(
+    //   PathOperation.difference,
+    //   fullViewPath,
+    //   backgroundFillPath,
+    // );
 
     if (linearGradientBackgroundColor != null) {
       Offset shaderEndPoint =
@@ -432,11 +432,11 @@ class _LinearPainter extends CustomPainter {
           Rect.fromLTWH(0, 0, xProgress, size.height), barRadius));
     }
 
-    final Path finalProgressFillPath = Path.combine(
-      PathOperation.reverseDifference,
-      clipOutsideFillPath,
-      progressPath,
-    );
+    // final Path finalProgressFillPath = Path.combine(
+    //   PathOperation.reverseDifference,
+    //   clipOutsideFillPath,
+    //   progressPath,
+    // );
 
     final Path finalProgressBorderPath = Path.combine(
       PathOperation.reverseDifference,
@@ -455,7 +455,7 @@ class _LinearPainter extends CustomPainter {
     }
 
     /// Draw progress fill color
-    canvas.drawPath(finalProgressFillPath, _paintLine);
+    canvas.drawPath(progressPath, _paintLine);
 
     /// Draw diagonal Line
     if (diagonalLineColor != null) {
